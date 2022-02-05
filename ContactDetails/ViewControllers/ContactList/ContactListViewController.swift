@@ -18,7 +18,7 @@ enum ContactListActions {
   case navigateToAddContact
 }
 
-class ViewController: UIViewController {
+class ContactListViewController: UIViewController {
   @IBOutlet weak var tableView: UITableView!
   var persistentContainer: NSPersistentContainer?
   var viewModel: ContactListViewModel?
@@ -32,6 +32,7 @@ class ViewController: UIViewController {
     fetchRequest.sortDescriptors = [sortDescriptor]
     
     let fetchedResultsController = NSFetchedResultsController<Contacts>(fetchRequest: fetchRequest, managedObjectContext: self.persistentContainer!.viewContext, sectionNameKeyPath: "firstNameInitial", cacheName: nil)
+    fetchedResultsController.delegate = self
     return fetchedResultsController
   }()
   
@@ -54,7 +55,7 @@ class ViewController: UIViewController {
       case .success:
         DispatchQueue.main.async {
           self?.syncContactsToCoreData(results: self?.viewModel?.contactListData)
-          self?.fetchData()
+          self?.performFetch()
           self?.hideSpinner() 
           self?.tableView.reloadData()
         }
@@ -68,7 +69,7 @@ class ViewController: UIViewController {
       }
     }
     
-    fetchData()
+    performFetch()
     
     self.fetchedContacts = fetchedResultsController.fetchedObjects!
     if fetchedContacts.isEmpty {
@@ -89,7 +90,7 @@ class ViewController: UIViewController {
     tableView.register(ContactDetailCell.self, forCellReuseIdentifier: ContactDetailCell.identifier)
   }
   
-  private func fetchData() {
+  private func performFetch() {
     do {
       try fetchedResultsController.performFetch()
     } catch let error {
@@ -135,7 +136,7 @@ class ViewController: UIViewController {
   }
 }
 
-extension ViewController: UITableViewDelegate, UITableViewDataSource {
+extension ContactListViewController: UITableViewDelegate, UITableViewDataSource {
   func numberOfSections(in tableView: UITableView) -> Int {
     if let sections = fetchedResultsController.sections {
       return sections.count
@@ -154,7 +155,7 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     guard let cell = tableView.dequeueReusableCell(withIdentifier: ContactDetailCell.identifier) as? ContactDetailCell else { return UITableViewCell() }
     let rowData = fetchedResultsController.object(at: indexPath)
-    cell.render(image: rowData.avatarUrl ?? "", name: (rowData.firstName ?? "") + " " + (rowData.lastName ?? ""))
+    cell.render(image: rowData.avatarUrl, name: (rowData.firstName ?? "") + " " + (rowData.lastName ?? ""), uploadedImage: rowData.userUploadedImage, isFavorite: rowData.isFavourite)
     return cell
   }
   
@@ -174,5 +175,11 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     let rowData = fetchedResultsController.object(at: indexPath)
     delegate?.didAction(.navigateToDetail(contact: rowData))
+  }
+}
+
+extension ContactListViewController: NSFetchedResultsControllerDelegate {
+  func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+    tableView.reloadData()
   }
 }

@@ -16,7 +16,7 @@ final class ContactDetailsFlowContainer {
   
   lazy var initialViewController: UIViewController? = {
     let mainStoryboard: UIStoryboard = UIStoryboard(name: "Main", bundle: nil)
-    guard let initialVc = mainStoryboard.instantiateInitialViewController() as? ViewController else { return nil }
+    guard let initialVc = mainStoryboard.instantiateInitialViewController() as? ContactListViewController else { return nil }
     initialVc.persistentContainer = self.persistentContainer
     initialVc.viewModel = flowViewModel.contactListViewModel
     initialVc.delegate = self
@@ -44,6 +44,7 @@ extension ContactDetailsFlowContainer: ContactListDelegate {
     guard let vc = mainStoryboard.instantiateViewController(withIdentifier: "contact_detail") as? ContactDetailViewController else { return }
     let viewModel = ContactDetailViewModel(contact: contact)
     vc.viewModel = viewModel
+    vc.persistentContainer = persistentContainer
     self.navController.pushViewController(vc, animated: true)
   }
   
@@ -51,6 +52,7 @@ extension ContactDetailsFlowContainer: ContactListDelegate {
     let mainStoryboard: UIStoryboard = UIStoryboard(name: "Main", bundle: nil)
     guard let vc = mainStoryboard.instantiateViewController(withIdentifier: "add_contact") as? AddContactViewController else { return }
     vc.persistentContainer = persistentContainer
+    vc.delegate = self
     self.navController.pushViewController(vc, animated: true)
   }
   
@@ -63,6 +65,18 @@ extension ContactDetailsFlowContainer: ContactListDelegate {
       navigateToAddContact()
     }
   }
+}
+
+extension ContactDetailsFlowContainer: AddContactViewDelegate {
+  private func navigateToBack() {
+    self.navController.popViewController(animated: true)
+  }
   
   
+  func didAction(_ action: AddContactViewActions) {
+    switch action {
+    case .navigateToBack:
+      navigateToBack()
+    }
+  }
 }

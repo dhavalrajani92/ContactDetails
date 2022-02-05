@@ -8,7 +8,7 @@
 import CoreData
 
 final class ContactDetailViewModel {
-  private let contact: Contacts
+  var contact: Contacts
   
   init(contact: Contacts) {
     self.contact = contact
@@ -21,6 +21,10 @@ extension ContactDetailViewModel {
     return url
   }
   
+  var userUploadedImage: Data? {
+    return contact.userUploadedImage
+  }
+  
   var name: String {
     return (contact.firstName ?? "") + " " + (contact.lastName ?? "")
   }
@@ -31,5 +35,9 @@ extension ContactDetailViewModel {
   
   var email: String {
     return contact.email ?? ""
+  }
+  
+  var isFavroite: Bool {
+    return contact.isFavourite ?? false
   }
 }

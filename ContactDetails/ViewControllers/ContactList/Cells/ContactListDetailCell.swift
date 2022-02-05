@@ -7,9 +7,7 @@
 
 import UIKit
 
-final class ContactDetailCell: UITableViewCell {
-  
-  static let identifier = "ContactDetailCell"
+final class ContactDetailCell: UITableViewCell, FormBaseTableViewCell {
   
   private lazy var userImageView: UIImageView = {
     let imageView = UIImageView()
@@ -24,9 +22,32 @@ final class ContactDetailCell: UITableViewCell {
     return label
   }()
   
+  private lazy var starIcon: UIImageView = {
+    let imageView = UIImageView()
+    imageView.translatesAutoresizingMaskIntoConstraints = false
+    imageView.image = UIImage(named: "starIcon", in: nil, compatibleWith: nil)?.withRenderingMode(.alwaysTemplate)
+    imageView.tintColor = UIColor(red: 0.31, green: 0.89, blue: 0.75, alpha: 1.00)
+    imageView.backgroundColor = .clear
+    return imageView
+  }()
+  
+  private lazy var nameLabelTraillingAnchor = nameLabel.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -16)
+  
   override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
     super.init(style: style, reuseIdentifier: reuseIdentifier)
     setupView()
+  }
+  
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    self.contentView.layoutSubviews()
+    userImageView.layer.masksToBounds = true
+    userImageView.layer.cornerRadius = userImageView.bounds.width / 2
+  }
+  
+  override func prepareForReuse() {
+    super.prepareForReuse()
+    starIcon.removeFromSuperview()
   }
   
   required init?(coder: NSCoder) {
@@ -45,28 +66,42 @@ final class ContactDetailCell: UITableViewCell {
       userImageView.widthAnchor.constraint(equalToConstant: 40),
       userImageView.bottomAnchor.constraint(equalTo: self.nameLabel.bottomAnchor),
       
-      nameLabel.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -16),
+      nameLabelTraillingAnchor,
       nameLabel.topAnchor.constraint(equalTo: self.userImageView.topAnchor),
       nameLabel.bottomAnchor.constraint(equalTo: self.contentView.bottomAnchor, constant: -16)
     ])
   }
   
-  func render(image: String, name: String) {
+  func render(image: String?, name: String, uploadedImage: Data?, isFavorite: Bool = false) {
     nameLabel.text = name
     
-    guard let url = URL(string: image) else {
-      return
+    if isFavorite == true {
+      nameLabelTraillingAnchor.isActive = false
+      self.contentView.addSubview(starIcon)
+      
+      NSLayoutConstraint.activate([
+        starIcon.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -16),
+        starIcon.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
+        starIcon.widthAnchor.constraint(equalToConstant: 25),
+        starIcon.heightAnchor.constraint(equalToConstant: 25)
+      ])
     }
     
-    ImageDownloder.downloadImage(from: url) {[weak self] imageData, error in
-      if let imageData = imageData {
-        DispatchQueue.main.async {
-          self?.userImageView.image = UIImage(data: imageData)
+    
+    if let uploadedImage = uploadedImage {
+      self.userImageView.image = UIImage(data: uploadedImage)
+    } else if let imageString = image, let url = URL(string: imageString) {
+      ImageDownloder.downloadImage(from: url) {[weak self] imageData, error in
+        if let imageData = imageData {
+          DispatchQueue.main.async {
+            self?.userImageView.image = UIImage(data: imageData)
+          }
+        } else {
+          print((error as? Failure)?.message)
         }
-      } else {
-        print((error as? Failure)?.message)
       }
     }
+    
     
   }
   

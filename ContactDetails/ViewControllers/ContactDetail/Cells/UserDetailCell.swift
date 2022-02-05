@@ -7,8 +7,7 @@
 
 import UIKit
 
-final class UserDetailCell: UITableViewCell {
-  static let identifier = "UserDetailCell"
+final class UserDetailCell: UITableViewCell, FormBaseTableViewCell {
   private lazy var titleLabel: UILabel = {
     let label = UILabel()
     label.translatesAutoresizingMaskIntoConstraints = false

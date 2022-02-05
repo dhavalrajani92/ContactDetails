@@ -10,7 +10,7 @@ import UIKit
 
 class ContactDetailViewController: UIViewController {
   @IBOutlet weak var tableView: UITableView!
-  
+  var persistentContainer: NSPersistentContainer?
   var viewModel: ContactDetailViewModel?
   
   override func viewDidLoad() {
@@ -37,13 +37,15 @@ extension ContactDetailViewController: UITableViewDelegate, UITableViewDataSourc
   }
   
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    guard let viewModel = viewModel, let userImageUrl = viewModel.userImageUrl else { return UITableViewCell() }
+    guard let viewModel = viewModel else { return UITableViewCell() }
     let nameLabel = viewModel.name
+    let userImageUrl = viewModel.userImageUrl
     
     switch indexPath.row {
     case 0:
       guard let cell = tableView.dequeueReusableCell(withIdentifier: HeaderCell.identifier, for: indexPath) as? HeaderCell else { return UITableViewCell() }
-      cell.render(image: userImageUrl, name: nameLabel, mobile: nil, email: nil)
+      cell.render(image: userImageUrl, userUploadedImage: viewModel.userUploadedImage, name: nameLabel, mobile: viewModel.mobile, email: viewModel.email, isFavorite: viewModel.isFavroite)
+      cell.delegate = self
       return cell
     case 1:
       guard let cell = tableView.dequeueReusableCell(withIdentifier: UserDetailCell.identifier, for: indexPath) as? UserDetailCell else { return UITableViewCell() }
@@ -59,3 +61,18 @@ extension ContactDetailViewController: UITableViewDelegate, UITableViewDataSourc
   }
 }
 
+extension ContactDetailViewController: HeaderCellDelegate {
+  func makeContactFavorite() {
+    guard let persistentContainer = persistentContainer, let viewModel = self.viewModel else { return }
+    let viewContext = persistentContainer.viewContext
+    viewModel.contact.isFavourite = !viewModel.isFavroite
+    do {
+      try viewContext.save()
+      tableView.reloadData()
+    } catch {
+      print("Error: \(error)\nnot able to save to coredata")
+    }
+  }
+  
+  
+}

@@ -9,8 +9,9 @@
         <attribute name="isFavourite" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="lastName" optional="YES" attributeType="String"/>
         <attribute name="mobileNumber" optional="YES" attributeType="String"/>
+        <attribute name="userUploadedImage" optional="YES" attributeType="Binary"/>
     </entity>
     <elements>
-        <element name="Contacts" positionX="-63" positionY="-18" width="128" height="149"/>
+        <element name="Contacts" positionX="-63" positionY="-18" width="128" height="164"/>
     </elements>
 </model>
